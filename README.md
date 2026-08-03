@@ -109,3 +109,57 @@ To execute the plan task-by-task using subagent-driven development:
 4. Fix any issues found before moving to the next task
 
 Each task in the plan is self-contained with exact file paths, complete code blocks, test commands, and expected output.
+
+---
+
+## MCP Server (AI Assistant Integration)
+
+Connect Claude Desktop, Cursor, OpenCode, or any MCP-compatible client to this app and manage your tasks through natural conversation.
+
+The MCP server lives in [`mcp/`](mcp/) and runs via [uv](https://docs.astral.sh/uv/) over stdio. It talks to this app's REST API — so the backend must be running for it to work.
+
+### Setup
+
+1. Install [uv](https://docs.astral.sh/uv/): `curl -LsSf https://astral.sh/uv/install.sh | sh`
+2. Start the backend: `uvicorn backend.main:app`
+3. Add the MCP server to your AI client's config (full examples in [`mcp/README.md`](mcp/README.md)):
+
+   ```json
+   {
+     "mcpServers": {
+       "schedule-organiser": {
+         "command": "uv",
+         "args": ["run", "--project", "/ABSOLUTE/PATH/TO/schedule_organiser/mcp", "python", "/ABSOLUTE/PATH/TO/schedule_organiser/mcp/server.py"],
+         "env": { "SCHEDULE_API_URL": "http://localhost:8000" }
+       }
+     }
+   }
+   ```
+4. Restart your AI client.
+
+### Available tools
+
+| Tool | Description |
+|---|---|
+| `list_tasks` | List all tasks, optionally filtered by status or priority |
+| `get_task` | Get full task details including subtasks |
+| `create_task` | Create a task with title, description, dates, subtasks |
+| `update_task` | Update any field on a task |
+| `delete_task` | Delete a task permanently |
+| `parse_and_create` | Send narrative text → AI extracts and creates multiple tasks |
+| `add_subtask` | Add a subtask to a task |
+| `complete_subtask` | Mark a subtask done (or undo) |
+
+### Example
+
+Just talk to your AI assistant:
+
+> **You:** "I need to book a dentist and finish the Q3 report by Friday."
+>
+> **AI:** *calls `parse_and_create`* — creates two tasks: "Book dentist appointment" and "Finish Q3 report" (due Friday), each with an auto-generated description and subtasks.
+
+> **You:** "What's on my plate?"
+>
+> **AI:** *calls `list_tasks`* — lists your tasks with priority, status, and due dates.
+
+See [`mcp/README.md`](mcp/README.md) for the full tool reference and example conversations.
