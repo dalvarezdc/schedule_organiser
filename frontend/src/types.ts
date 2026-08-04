@@ -1,14 +1,6 @@
 export type TaskStatus = 'pending' | 'in_progress' | 'done'
 export type TaskPriority = 'low' | 'medium' | 'high'
 
-export interface Subtask {
-  id: string
-  task_id: string
-  title: string
-  done: boolean
-  order: number
-}
-
 export interface Task {
   id: string
   title: string
@@ -19,9 +11,11 @@ export interface Task {
   scheduled_date: string | null
   google_event_id: string | null
   share_token: string | null
+  parent_id: string | null
+  order: number
   created_at: string
   updated_at: string
-  subtasks: Subtask[]
+  children: Task[]
 }
 
 export interface ParsedSubtask {
@@ -35,6 +29,12 @@ export interface ParsedTask {
   due_date: string | null
   scheduled_date: string | null
   priority: TaskPriority
+}
+
+export interface ImproveResult {
+  title: string
+  description: string
+  suggested_subtasks: ParsedSubtask[]
 }
 
 export interface Settings {

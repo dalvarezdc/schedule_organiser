@@ -71,9 +71,9 @@ export default function InputPanel() {
           onChange={e => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="e.g. I need to finish the Q3 report by Friday. It needs a data section, an executive summary, and sign-off from the team. Also book a dentist and call the accountant about taxes before end of month..."
-          rows={9}
-          autoFocus
-          className="w-full border border-gray-200 rounded-2xl p-5 text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none transition-all leading-relaxed"
+      rows={14}
+      autoFocus
+      className="w-full border border-slate-200 rounded-2xl p-5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 resize-none transition-all leading-relaxed"
         />
         <div className="absolute bottom-4 right-4 text-xs text-gray-300 pointer-events-none">
           {text.trim() ? '⌘↵ to suggest' : ''}
@@ -85,7 +85,7 @@ export default function InputPanel() {
         <button
           onClick={handleParse}
           disabled={parsing || !text.trim()}
-          className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-40 transition-colors flex items-center gap-2"
+          className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-40 transition-colors flex items-center gap-2"
         >
           {parsing ? (
             <>
