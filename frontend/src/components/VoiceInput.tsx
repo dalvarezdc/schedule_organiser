@@ -41,13 +41,15 @@ export default function VoiceInput({ onTranscript }: Props) {
       <button
         type="button"
         onClick={recording ? stop : start}
-        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-          recording ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+          recording
+            ? 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+            : 'bg-white text-slate-600 hover:bg-slate-50 shadow-card border border-slate-100'
         }`}
       >
         {recording ? '⏹ Stop recording' : '🎤 Voice input'}
       </button>
-      {error && <span className="text-red-500 text-xs">{error}</span>}
+      {error && <span className="text-rose-500 text-xs">{error}</span>}
     </div>
   )
 }

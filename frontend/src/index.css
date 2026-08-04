@@ -3,15 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --navy: #1e3a5f;
+  --navy-deep: #152d4a;
+  --surface: #f4f6f9;
+  --font-sans: 'Lato', system-ui, sans-serif;
 
-  font-family: var(--sans);
-  font-size: 16px;
+  font-family: var(--font-sans);
+  font-size: 15px;
   line-height: 1.5;
+  color: #1e293b;
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--navy-deep);
 }
 
 #root {
@@ -20,6 +41,40 @@
   flex-direction: column;
 }
 
-body {
-  margin: 0;
+/* Custom checkbox used in task rows */
+.task-checkbox {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9999px;
+  background: white;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.task-checkbox:hover {
+  border-color: #94a3b8;
+}
+
+.task-checkbox:checked {
+  background: #0d9488;
+  border-color: #0d9488;
+  box-shadow: inset 0 0 0 2px white;
+}
+
+/* Scrollbars inside main panel */
+.panel-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.panel-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }

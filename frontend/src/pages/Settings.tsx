@@ -4,8 +4,19 @@ import { useState } from 'react'
 
 const MODELS_BY_PROVIDER: Record<string, string[]> = {
   openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'o3', 'o4-mini'],
-  anthropic: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
-  gemini: ['gemini-3.6-pro', 'gemini-3.6-flash', 'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash'],
+  anthropic: [
+    'claude-sonnet-4-20250514',
+    'claude-opus-4-20250514',
+    'claude-3-5-sonnet-20241022',
+    'claude-3-5-haiku-20241022',
+  ],
+  gemini: [
+    'gemini-3.6-pro',
+    'gemini-3.6-flash',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+  ],
   grok: ['grok-4.5', 'grok-4', 'grok-4-latest', 'grok-3', 'grok-3-mini'],
   custom: [],
 }
@@ -18,6 +29,9 @@ const PROVIDER_HELP: Record<string, string> = {
   custom: 'Use any OpenAI-compatible endpoint (Ollama, Groq, Together AI, etc.)',
 }
 
+const inputClass =
+  'w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white text-slate-700 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20'
+
 export default function Settings() {
   const queryClient = useQueryClient()
   const { data: settings, isLoading } = useQuery({ queryKey: ['settings'], queryFn: getSettings })
@@ -25,7 +39,9 @@ export default function Settings() {
   const [saved, setSaved] = useState(false)
   const [form, setForm] = useState<Record<string, string>>({})
 
-  if (isLoading || !settings) return <div className="p-8 text-gray-400">Loading...</div>
+  if (isLoading || !settings) {
+    return <div className="text-slate-400 text-sm">Loading…</div>
+  }
 
   const val = (field: string, fallback: string) => form[field] ?? fallback
 
@@ -59,111 +75,164 @@ export default function Settings() {
   const isCustomModel = currentProvider === 'custom' || !knownModels.includes(currentModel)
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
-      <form onSubmit={save} className="space-y-6">
-        <section className="space-y-3">
-          <h2 className="font-semibold text-gray-700">AI Provider</h2>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Provider</label>
-            <select
-              value={currentProvider}
-              onChange={e => {
-                const p = e.target.value
-                const defaultModel = (MODELS_BY_PROVIDER[p] && MODELS_BY_PROVIDER[p][0]) || ''
-                setForm(prev => ({ ...prev, ai_provider: p, ai_model: defaultModel }))
-              }}
-              className="w-full border rounded px-3 py-2 text-sm"
-            >
-              <option value="openai">OpenAI</option>
-              <option value="anthropic">Anthropic (Claude)</option>
-              <option value="gemini">Google Gemini</option>
-              <option value="grok">xAI Grok</option>
-              <option value="custom">Custom (OpenAI-compatible)</option>
-            </select>
-          </div>
-          {currentProvider !== 'custom' && (
+    <div className="max-w-xl mx-auto">
+      <div className="bg-white rounded-card shadow-card p-6">
+        <h2 className="text-lg font-bold text-navy mb-6">Settings</h2>
+        <form onSubmit={save} className="space-y-6">
+          <section className="space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">AI Provider</h3>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Model</label>
+              <label className="block text-xs text-slate-500 mb-1 font-medium">Provider</label>
               <select
-                value={isCustomModel ? '__custom__' : currentModel}
+                value={currentProvider}
                 onChange={e => {
-                  const v = e.target.value
-                  if (v === '__custom__') {
-                    setForm(prev => ({ ...prev, ai_model: '' }))
-                  } else {
-                    setForm(prev => ({ ...prev, ai_model: v }))
-                  }
+                  const p = e.target.value
+                  const defaultModel = (MODELS_BY_PROVIDER[p] && MODELS_BY_PROVIDER[p][0]) || ''
+                  setForm(prev => ({ ...prev, ai_provider: p, ai_model: defaultModel }))
                 }}
-                className="w-full border rounded px-3 py-2 text-sm"
+                className={inputClass}
               >
-                {knownModels.map(m => <option key={m} value={m}>{m}</option>)}
-                <option value="__custom__">Custom…</option>
+                <option value="openai">OpenAI</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="grok">xAI Grok</option>
+                <option value="custom">Custom (OpenAI-compatible)</option>
               </select>
-              {isCustomModel && (
+            </div>
+            {currentProvider !== 'custom' && (
+              <div>
+                <label className="block text-xs text-slate-500 mb-1 font-medium">Model</label>
+                <select
+                  value={isCustomModel ? '__custom__' : currentModel}
+                  onChange={e => {
+                    const v = e.target.value
+                    if (v === '__custom__') {
+                      setForm(prev => ({ ...prev, ai_model: '' }))
+                    } else {
+                      setForm(prev => ({ ...prev, ai_model: v }))
+                    }
+                  }}
+                  className={inputClass}
+                >
+                  {knownModels.map(m => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  ))}
+                  <option value="__custom__">Custom…</option>
+                </select>
+                {isCustomModel && (
+                  <input
+                    {...field('ai_model', '')}
+                    placeholder="Type exact model identifier"
+                    className={`${inputClass} mt-2`}
+                  />
+                )}
+              </div>
+            )}
+            {currentProvider === 'custom' && (
+              <div>
+                <label className="block text-xs text-slate-500 mb-1 font-medium">Model</label>
                 <input
-                  {...field('ai_model', '')}
-                  placeholder="Type exact model identifier"
-                  className="w-full border rounded px-3 py-2 text-sm mt-2"
+                  {...field('ai_model', settings.ai_model)}
+                  placeholder="model-name"
+                  className={inputClass}
                 />
-              )}
-            </div>
-          )}
-          {currentProvider === 'custom' && (
+              </div>
+            )}
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Model</label>
-              <input {...field('ai_model', settings.ai_model)} placeholder="model-name" className="w-full border rounded px-3 py-2 text-sm" />
+              <label className="block text-xs text-slate-500 mb-1 font-medium">
+                API Key{' '}
+                {settings.ai_api_key_set && (
+                  <span className="text-brand-tealDark ml-1">✓ set</span>
+                )}
+              </label>
+              <input
+                type="password"
+                {...field('ai_api_key', '')}
+                placeholder={
+                  settings.ai_api_key_set
+                    ? '••••••••••• (leave blank to keep existing)'
+                    : 'Enter API key'
+                }
+                className={inputClass}
+              />
             </div>
-          )}
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">
-              API Key {settings.ai_api_key_set && <span className="text-green-500 ml-1">✓ set</span>}
-            </label>
-            <input
-              type="password"
-              {...field('ai_api_key', '')}
-              placeholder={settings.ai_api_key_set ? '••••••••••• (leave blank to keep existing)' : 'Enter API key'}
-              className="w-full border rounded px-3 py-2 text-sm"
-            />
-          </div>
-          {currentProvider === 'custom' && (
+            {currentProvider === 'custom' && (
+              <div>
+                <label className="block text-xs text-slate-500 mb-1 font-medium">Base URL</label>
+                <input
+                  {...field('ai_base_url', settings.ai_base_url)}
+                  placeholder="https://api.openai.com"
+                  className={inputClass}
+                />
+              </div>
+            )}
+            <p className="text-xs text-slate-400">{PROVIDER_HELP[currentProvider] || ''}</p>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Notifications
+            </h3>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Base URL</label>
-              <input {...field('ai_base_url', settings.ai_base_url)} placeholder="https://api.openai.com" className="w-full border rounded px-3 py-2 text-sm" />
+              <label className="block text-xs text-slate-500 mb-1 font-medium">
+                Slack Webhook URL
+              </label>
+              <input
+                {...field('slack_webhook_url', settings.slack_webhook_url)}
+                placeholder="https://hooks.slack.com/..."
+                className={inputClass}
+              />
             </div>
-          )}
-          <p className="text-xs text-gray-400">{PROVIDER_HELP[currentProvider] || ''}</p>
-        </section>
-        <section className="space-y-3">
-          <h2 className="font-semibold text-gray-700">Notifications</h2>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Slack Webhook URL</label>
-            <input {...field('slack_webhook_url', settings.slack_webhook_url)} placeholder="https://hooks.slack.com/..." className="w-full border rounded px-3 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Discord Webhook URL</label>
-            <input {...field('discord_webhook_url', settings.discord_webhook_url)} placeholder="https://discord.com/api/webhooks/..." className="w-full border rounded px-3 py-2 text-sm" />
-          </div>
-        </section>
-        <section className="space-y-3">
-          <h2 className="font-semibold text-gray-700">Google Calendar</h2>
-          <div className="flex items-center gap-3">
-            <span className={`text-sm ${settings.google_connected ? 'text-green-600' : 'text-gray-400'}`}>
-              {settings.google_connected ? '✓ Connected' : 'Not connected'}
-            </span>
-            <a href="/api/integrations/calendar/connect" className="text-sm text-blue-600 hover:underline">
-              {settings.google_connected ? 'Reconnect' : 'Connect Google Calendar'}
-            </a>
-          </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Calendar ID</label>
-            <input {...field('google_calendar_id', settings.google_calendar_id)} placeholder="primary" className="w-full border rounded px-3 py-2 text-sm" />
-          </div>
-        </section>
-        <button type="submit" disabled={saving} className="w-full bg-blue-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
-          {saving ? 'Saving...' : saved ? 'Saved!' : 'Save settings'}
-        </button>
-      </form>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1 font-medium">
+                Discord Webhook URL
+              </label>
+              <input
+                {...field('discord_webhook_url', settings.discord_webhook_url)}
+                placeholder="https://discord.com/api/webhooks/..."
+                className={inputClass}
+              />
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+              Google Calendar
+            </h3>
+            <div className="flex items-center gap-3">
+              <span
+                className={`text-sm ${settings.google_connected ? 'text-brand-tealDark' : 'text-slate-400'}`}
+              >
+                {settings.google_connected ? '✓ Connected' : 'Not connected'}
+              </span>
+              <a
+                href="/api/integrations/calendar/connect"
+                className="text-sm text-brand-blue hover:underline font-medium"
+              >
+                {settings.google_connected ? 'Reconnect' : 'Connect Google Calendar'}
+              </a>
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1 font-medium">Calendar ID</label>
+              <input
+                {...field('google_calendar_id', settings.google_calendar_id)}
+                placeholder="primary"
+                className={inputClass}
+              />
+            </div>
+          </section>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full bg-navy text-white py-2.5 rounded-xl text-sm font-bold hover:bg-navy-mid disabled:opacity-50 transition-colors shadow-soft"
+          >
+            {saving ? 'Saving…' : saved ? 'Saved!' : 'Save settings'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

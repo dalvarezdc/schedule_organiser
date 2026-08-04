@@ -28,9 +28,9 @@ export default function TaskPicker({ allTasks, excludeIds, onSelect, onClose }: 
     : candidates
 
   return (
-    <div className="border border-slate-200 rounded-xl bg-white shadow-lg p-3 w-80">
+    <div className="border border-slate-200 rounded-card bg-white shadow-soft p-3 w-80">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-slate-600">Link existing task as subtask</span>
+        <span className="text-xs font-bold text-navy">Link existing task as subtask</span>
         <button
           onClick={onClose}
           className="text-slate-400 hover:text-slate-600 text-xs leading-none"
@@ -44,7 +44,7 @@ export default function TaskPicker({ allTasks, excludeIds, onSelect, onClose }: 
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Search tasks…"
-        className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400 mb-2"
+        className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-brand-teal mb-2"
       />
       <ul className="max-h-48 overflow-y-auto space-y-0.5">
         {filtered.length === 0 && (
@@ -54,7 +54,7 @@ export default function TaskPicker({ allTasks, excludeIds, onSelect, onClose }: 
           <li key={t.id}>
             <button
               onClick={() => onSelect(t.id)}
-              className="w-full text-left text-sm px-2 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition-colors"
+              className="w-full text-left text-sm px-2 py-1.5 rounded-lg hover:bg-teal-50 hover:text-brand-tealDark text-slate-700 transition-colors font-medium"
             >
               {t.title}
             </button>

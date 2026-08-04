@@ -11,7 +11,7 @@ export default function ImprovePanel({ result, onApply, onCancel }: Props) {
   const [title, setTitle] = useState(result.title)
   const [description, setDescription] = useState(result.description)
   const [checked, setChecked] = useState<boolean[]>(
-    result.suggested_subtasks.map(() => true)
+    result.suggested_subtasks.map(() => true),
   )
 
   const toggle = (i: number) =>
@@ -25,14 +25,12 @@ export default function ImprovePanel({ result, onApply, onCancel }: Props) {
   }
 
   return (
-    <div className="border border-indigo-200 bg-indigo-50 rounded-xl p-4 space-y-4 mt-3">
+    <div className="border border-teal-100 bg-teal-50/60 rounded-card p-4 space-y-4 mt-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-indigo-800">
-          AI suggestions — review before applying
-        </h4>
+        <h4 className="text-sm font-bold text-navy">AI suggestions — review before applying</h4>
         <button
           onClick={onCancel}
-          className="text-slate-400 hover:text-slate-600 text-xs"
+          className="text-slate-400 hover:text-slate-600 text-xs font-medium"
           aria-label="Discard suggestions"
         >
           ✕ Discard
@@ -44,17 +42,19 @@ export default function ImprovePanel({ result, onApply, onCancel }: Props) {
         <input
           value={title}
           onChange={e => setTitle(e.target.value)}
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 bg-white"
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-teal bg-white"
         />
       </div>
 
       <div>
-        <label className="block text-xs text-slate-500 mb-1 font-medium">Improved description</label>
+        <label className="block text-xs text-slate-500 mb-1 font-medium">
+          Improved description
+        </label>
         <textarea
           value={description}
           onChange={e => setDescription(e.target.value)}
           rows={5}
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 resize-vertical bg-white leading-relaxed"
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-teal resize-vertical bg-white leading-relaxed"
         />
       </div>
 
@@ -70,7 +70,7 @@ export default function ImprovePanel({ result, onApply, onCancel }: Props) {
                   type="checkbox"
                   checked={checked[i]}
                   onChange={() => toggle(i)}
-                  className="accent-indigo-600 cursor-pointer"
+                  className="task-checkbox"
                 />
                 <span className={checked[i] ? 'text-slate-700' : 'text-slate-400 line-through'}>
                   {sub.title}
@@ -84,13 +84,13 @@ export default function ImprovePanel({ result, onApply, onCancel }: Props) {
       <div className="flex gap-3 pt-1">
         <button
           onClick={handleApply}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors"
+          className="bg-navy text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-navy-mid transition-colors"
         >
           Apply changes
         </button>
         <button
           onClick={onCancel}
-          className="text-slate-500 hover:text-slate-700 text-sm px-2 transition-colors"
+          className="text-slate-500 hover:text-slate-700 text-sm px-2 font-medium transition-colors"
         >
           Cancel
         </button>

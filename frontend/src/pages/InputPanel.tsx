@@ -34,7 +34,7 @@ export default function InputPanel() {
   }
 
   const handleVoiceTranscript = (transcript: string) => {
-    setText(prev => prev ? `${prev} ${transcript}` : transcript)
+    setText(prev => (prev ? `${prev} ${transcript}` : transcript))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -46,10 +46,13 @@ export default function InputPanel() {
 
   if (preview) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      <div className="max-w-2xl mx-auto">
         <ParsePreview
           tasks={preview}
-          onConfirm={() => { setText(''); setPreview(null) }}
+          onConfirm={() => {
+            setText('')
+            setPreview(null)
+          }}
           onCancel={() => setPreview(null)}
         />
       </div>
@@ -57,26 +60,28 @@ export default function InputPanel() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">What do you need to do?</h1>
-        <p className="text-gray-400 text-sm">
+    <div className="max-w-2xl mx-auto">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-navy mb-1.5">What do you need to do?</h2>
+        <p className="text-slate-500 text-sm">
           Write freely — the AI will draft tickets with tasks and subtasks for you to review.
         </p>
       </div>
 
-      <div className="relative">
-        <textarea
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="e.g. I need to finish the Q3 report by Friday. It needs a data section, an executive summary, and sign-off from the team. Also book a dentist and call the accountant about taxes before end of month..."
-      rows={14}
-      autoFocus
-      className="w-full border border-slate-200 rounded-2xl p-5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 resize-none transition-all leading-relaxed"
-        />
-        <div className="absolute bottom-4 right-4 text-xs text-gray-300 pointer-events-none">
-          {text.trim() ? '⌘↵ to suggest' : ''}
+      <div className="bg-white rounded-card shadow-card p-1">
+        <div className="relative">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="e.g. I need to finish the Q3 report by Friday. It needs a data section, an executive summary, and sign-off from the team. Also book a dentist and call the accountant about taxes before end of month..."
+            rows={12}
+            autoFocus
+            className="w-full border-0 rounded-card p-5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-teal/30 resize-none leading-relaxed bg-transparent"
+          />
+          <div className="absolute bottom-4 right-4 text-xs text-slate-300 pointer-events-none">
+            {text.trim() ? '⌘↵ to suggest' : ''}
+          </div>
         </div>
       </div>
 
@@ -85,11 +90,11 @@ export default function InputPanel() {
         <button
           onClick={handleParse}
           disabled={parsing || !text.trim()}
-          className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 disabled:opacity-40 transition-colors flex items-center gap-2"
+          className="bg-navy text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-navy-mid disabled:opacity-40 transition-colors flex items-center gap-2 shadow-soft"
         >
           {parsing ? (
             <>
-              <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span className="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
               Thinking…
             </>
           ) : (
@@ -99,8 +104,8 @@ export default function InputPanel() {
       </div>
 
       {error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-start gap-2">
-          <span className="shrink-0">⚠️</span>
+        <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-card text-sm text-rose-700 flex items-start gap-2">
+          <span className="shrink-0">⚠</span>
           <span>{error}</span>
         </div>
       )}

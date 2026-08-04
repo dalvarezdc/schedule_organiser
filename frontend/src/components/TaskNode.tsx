@@ -6,15 +6,15 @@ import { createTask, updateTask, deleteTask, linkAsChild } from '../api/client'
 import TaskPicker from './TaskPicker'
 
 const priorityBadge: Record<string, string> = {
-  low: 'bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded-full font-medium',
-  medium: 'bg-amber-50 text-amber-700 border border-amber-200 text-xs px-2 py-0.5 rounded-full font-medium',
-  high: 'bg-rose-50 text-rose-700 border border-rose-200 text-xs px-2 py-0.5 rounded-full font-medium',
+  low: 'bg-slate-100 text-slate-600',
+  medium: 'bg-sky-100 text-sky-700',
+  high: 'bg-rose-500 text-white',
 }
 
-const statusLabel: Record<string, string> = {
-  pending: 'text-slate-400',
-  in_progress: 'text-indigo-600',
-  done: 'text-emerald-600',
+const statusBadge: Record<string, string> = {
+  pending: 'bg-slate-100 text-slate-500',
+  in_progress: 'bg-indigo-50 text-indigo-600',
+  done: 'bg-emerald-50 text-emerald-600',
 }
 
 interface Props {
@@ -24,7 +24,6 @@ interface Props {
   allRootTasks?: Task[]
 }
 
-/** Collect all descendant IDs of a task (excluding itself). */
 function collectDescendantIds(task: Task): string[] {
   return task.children.flatMap(c => [c.id, ...collectDescendantIds(c)])
 }
@@ -38,7 +37,8 @@ export default function TaskNode({ task, depth = 0, onRefresh, allRootTasks = []
   const qc = useQueryClient()
 
   const hasChildren = task.children.length > 0
-  const indentPx = depth * 20
+  const isRoot = depth === 0
+  const padLeft = 12 + depth * 22
 
   const toggleDone = async () => {
     const next = task.status === 'done' ? 'pending' : 'done'
@@ -67,10 +67,11 @@ export default function TaskNode({ task, depth = 0, onRefresh, allRootTasks = []
   }
 
   const handleDelete = async () => {
-    const hasKids = task.children.length > 0
-    const msg = hasKids
-      ? `Delete "${task.title}" and all ${task.children.length} subtask(s) under it?`
-      : `Delete "${task.title}"?`
+    const n = collectDescendantIds(task).length
+    const msg =
+      n > 0
+        ? `Delete "${task.title}" and all ${n} subtask(s) under it?`
+        : `Delete "${task.title}"?`
     if (!confirm(msg)) return
     await deleteTask(task.id)
     qc.invalidateQueries({ queryKey: ['tasks'] })
@@ -87,78 +88,107 @@ export default function TaskNode({ task, depth = 0, onRefresh, allRootTasks = []
   const excludeIds = new Set([task.id, ...collectDescendantIds(task)])
 
   return (
-    <div style={{ marginLeft: indentPx }}>
-      <div className="flex items-start gap-2 py-1.5 group">
-        {/* Expand/collapse chevron */}
+    <div>
+      <div
+        className="group flex items-center gap-2 py-2.5 pr-3 hover:bg-slate-50/80 rounded-lg transition-colors"
+        style={{ paddingLeft: padLeft }}
+      >
+        {/* Expand / collapse */}
         <button
+          type="button"
           onClick={() => setExpanded(e => !e)}
-          className="mt-0.5 text-slate-300 hover:text-slate-500 w-4 shrink-0 text-xs leading-none"
+          className="w-5 h-5 shrink-0 flex items-center justify-center text-slate-300 hover:text-slate-500"
           aria-label={expanded ? 'Collapse' : 'Expand'}
         >
-          {hasChildren ? (expanded ? '▼' : '▶') : '·'}
+          {hasChildren ? (
+            <svg
+              className={`w-3 h-3 transition-transform ${expanded ? 'rotate-90' : ''}`}
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M6 4l8 6-8 6V4z" />
+            </svg>
+          ) : (
+            <span className="w-1 h-1 rounded-full bg-slate-200" />
+          )}
         </button>
 
-        {/* Done checkbox */}
+        {/* Checkbox */}
         <input
           type="checkbox"
           checked={task.status === 'done'}
           onChange={toggleDone}
-          className="mt-1 shrink-0 accent-indigo-600 cursor-pointer"
+          className="task-checkbox"
+          aria-label={`Mark ${task.title} done`}
         />
 
-        {/* Title + metadata */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              to={`/tasks/${task.id}`}
-              className={`font-medium hover:text-indigo-600 transition-colors text-sm ${
-                task.status === 'done' ? 'line-through text-slate-400' : 'text-slate-800'
-              }`}
+        {/* Title + badges */}
+        <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+          <Link
+            to={`/tasks/${task.id}`}
+            className={[
+              'text-sm transition-colors truncate max-w-[min(100%,28rem)]',
+              isRoot ? 'font-bold text-navy hover:text-brand-blue' : 'font-medium text-slate-700 hover:text-brand-blue',
+              task.status === 'done' ? 'line-through text-slate-400' : '',
+            ].join(' ')}
+          >
+            {task.title}
+          </Link>
+
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${priorityBadge[task.priority]}`}
+          >
+            {task.priority}
+          </span>
+
+          {isRoot && (
+            <span
+              className={`text-[10px] font-semibold lowercase px-2 py-0.5 rounded-full ${statusBadge[task.status]}`}
             >
-              {task.title}
-            </Link>
-            <span className={priorityBadge[task.priority]}>{task.priority}</span>
-            <span className={`text-xs ${statusLabel[task.status]}`}>
               {task.status.replace('_', ' ')}
             </span>
-            {task.due_date && (
-              <span className="text-xs text-slate-400">
-                Due {new Date(task.due_date).toLocaleDateString()}
-              </span>
-            )}
-          </div>
-
-          {/* Description toggle */}
-          {task.description && (
-            <button
-              onClick={() => setShowDesc(s => !s)}
-              className="text-xs text-slate-400 hover:text-slate-600 mt-0.5 transition-colors"
-            >
-              {showDesc ? '▲ Hide description' : '▼ Show description'}
-            </button>
-          )}
-          {showDesc && task.description && (
-            <p className="text-sm text-slate-500 mt-1 leading-relaxed pr-4">{task.description}</p>
           )}
         </div>
 
-        {/* Action buttons — visible on hover */}
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        {/* Description toggle */}
+        {task.description ? (
           <button
-            onClick={() => { setAddingChild(a => !a); setShowPicker(false) }}
-            className="text-xs text-indigo-500 hover:text-indigo-700 font-medium"
+            type="button"
+            onClick={() => setShowDesc(s => !s)}
+            className="text-xs text-slate-400 hover:text-slate-600 shrink-0 hidden sm:inline transition-colors"
           >
-            + Subtask
+            {showDesc ? 'Hide description' : 'Show description'}
+          </button>
+        ) : (
+          <span className="text-xs text-slate-300 shrink-0 hidden sm:inline">Show description</span>
+        )}
+
+        {/* Hover actions */}
+        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setAddingChild(a => !a)
+              setShowPicker(false)
+            }}
+            className="text-[11px] font-semibold text-brand-tealDark hover:text-teal-800 px-1.5"
+          >
+            + Sub
           </button>
           <button
-            onClick={() => { setShowPicker(s => !s); setAddingChild(false) }}
-            className="text-xs text-slate-400 hover:text-slate-600"
+            type="button"
+            onClick={() => {
+              setShowPicker(s => !s)
+              setAddingChild(false)
+            }}
+            className="text-[11px] font-medium text-slate-400 hover:text-slate-600 px-1.5"
           >
             Link
           </button>
           <button
+            type="button"
             onClick={handleDelete}
-            className="text-xs text-rose-400 hover:text-rose-600"
+            className="text-[11px] text-rose-400 hover:text-rose-600 px-1.5"
             aria-label="Delete"
           >
             ✕
@@ -166,23 +196,31 @@ export default function TaskNode({ task, depth = 0, onRefresh, allRootTasks = []
         </div>
       </div>
 
-      {/* Inline add-child form */}
+      {showDesc && task.description && (
+        <p
+          className="text-sm text-slate-500 leading-relaxed pb-2 pr-4"
+          style={{ paddingLeft: padLeft + 40 }}
+        >
+          {task.description}
+        </p>
+      )}
+
       {addingChild && (
         <form
           onSubmit={handleAddChild}
-          className="flex gap-2 mt-1 mb-2"
-          style={{ marginLeft: 24 }}
+          className="flex gap-2 py-2 pr-3"
+          style={{ paddingLeft: padLeft + 28 }}
         >
           <input
             autoFocus
             value={newChildTitle}
             onChange={e => setNewChildTitle(e.target.value)}
             placeholder="New subtask title…"
-            className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-400"
+            className="flex-1 border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-brand-teal bg-white"
           />
           <button
             type="submit"
-            className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-700 transition-colors"
+            className="bg-navy text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-navy-mid transition-colors"
           >
             Add
           </button>
@@ -196,9 +234,8 @@ export default function TaskNode({ task, depth = 0, onRefresh, allRootTasks = []
         </form>
       )}
 
-      {/* Link existing task picker */}
       {showPicker && (
-        <div style={{ marginLeft: 24 }} className="mb-3">
+        <div className="py-2" style={{ paddingLeft: padLeft + 28 }}>
           <TaskPicker
             excludeIds={excludeIds}
             allTasks={allRootTasks}
@@ -208,9 +245,8 @@ export default function TaskNode({ task, depth = 0, onRefresh, allRootTasks = []
         </div>
       )}
 
-      {/* Children (recursive) */}
       {expanded && hasChildren && (
-        <div className="border-l border-slate-100 ml-2">
+        <div>
           {task.children.map(child => (
             <TaskNode
               key={child.id}
