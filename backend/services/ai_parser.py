@@ -118,12 +118,12 @@ async def _call_ai(text: str, provider: str, api_key: str, model: str, base_url:
         return await _call_anthropic(text, api_key, model, base_url)
 
     if provider == "gemini":
-        return await _call_gemini(text, api_key, model or "gemini-2.0-flash")
+        return await _call_gemini(text, api_key, model or "gemini-3.6-flash")
 
     if provider == "grok":
         # xAI Grok is OpenAI-compatible; preset base URL
         base = base_url or "https://api.x.ai"
-        return await _call_openai_compatible(text, api_key, model or "grok-3", base)
+        return await _call_openai_compatible(text, api_key, model or "grok-4.5", base)
 
     # openai or custom — OpenAI-compatible
     base = base_url or "https://api.openai.com"

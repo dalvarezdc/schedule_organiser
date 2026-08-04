@@ -2,6 +2,22 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getSettings, updateSettings } from '../api/client'
 import { useState } from 'react'
 
+const MODELS_BY_PROVIDER: Record<string, string[]> = {
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'o3', 'o4-mini'],
+  anthropic: ['claude-sonnet-4-20250514', 'claude-opus-4-20250514', 'claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022'],
+  gemini: ['gemini-3.6-pro', 'gemini-3.6-flash', 'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.0-flash'],
+  grok: ['grok-4.5', 'grok-4', 'grok-4-latest', 'grok-3', 'grok-3-mini'],
+  custom: [],
+}
+
+const PROVIDER_HELP: Record<string, string> = {
+  openai: 'Get your API key at platform.openai.com',
+  anthropic: 'Get your API key at console.anthropic.com',
+  gemini: 'Get your API key at aistudio.google.com',
+  grok: 'Get your API key at console.x.ai',
+  custom: 'Use any OpenAI-compatible endpoint (Ollama, Groq, Together AI, etc.)',
+}
+
 export default function Settings() {
   const queryClient = useQueryClient()
   const { data: settings, isLoading } = useQuery({ queryKey: ['settings'], queryFn: getSettings })
@@ -37,6 +53,11 @@ export default function Settings() {
       setForm(prev => ({ ...prev, [key]: e.target.value })),
   })
 
+  const currentProvider = val('ai_provider', settings.ai_provider)
+  const knownModels = MODELS_BY_PROVIDER[currentProvider] || []
+  const currentModel = val('ai_model', settings.ai_model)
+  const isCustomModel = currentProvider === 'custom' || !knownModels.includes(currentModel)
+
   return (
     <div className="max-w-xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Settings</h1>
@@ -45,7 +66,15 @@ export default function Settings() {
           <h2 className="font-semibold text-gray-700">AI Provider</h2>
           <div>
             <label className="block text-xs text-gray-400 mb-1">Provider</label>
-            <select {...field('ai_provider', settings.ai_provider)} className="w-full border rounded px-3 py-2 text-sm">
+            <select
+              value={currentProvider}
+              onChange={e => {
+                const p = e.target.value
+                const defaultModel = (MODELS_BY_PROVIDER[p] && MODELS_BY_PROVIDER[p][0]) || ''
+                setForm(prev => ({ ...prev, ai_provider: p, ai_model: defaultModel }))
+              }}
+              className="w-full border rounded px-3 py-2 text-sm"
+            >
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic (Claude)</option>
               <option value="gemini">Google Gemini</option>
@@ -53,22 +82,39 @@ export default function Settings() {
               <option value="custom">Custom (OpenAI-compatible)</option>
             </select>
           </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Model</label>
-            <input
-              {...field('ai_model', settings.ai_model)}
-              className="w-full border rounded px-3 py-2 text-sm"
-              placeholder={
-                {
-                  openai: 'gpt-4o',
-                  anthropic: 'claude-3-5-sonnet-20241022',
-                  gemini: 'gemini-2.0-flash',
-                  grok: 'grok-3',
-                  custom: 'model-name',
-                }[val('ai_provider', settings.ai_provider)] || 'model-name'
-              }
-            />
-          </div>
+          {currentProvider !== 'custom' && (
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Model</label>
+              <select
+                value={isCustomModel ? '__custom__' : currentModel}
+                onChange={e => {
+                  const v = e.target.value
+                  if (v === '__custom__') {
+                    setForm(prev => ({ ...prev, ai_model: '' }))
+                  } else {
+                    setForm(prev => ({ ...prev, ai_model: v }))
+                  }
+                }}
+                className="w-full border rounded px-3 py-2 text-sm"
+              >
+                {knownModels.map(m => <option key={m} value={m}>{m}</option>)}
+                <option value="__custom__">Custom…</option>
+              </select>
+              {isCustomModel && (
+                <input
+                  {...field('ai_model', '')}
+                  placeholder="Type exact model identifier"
+                  className="w-full border rounded px-3 py-2 text-sm mt-2"
+                />
+              )}
+            </div>
+          )}
+          {currentProvider === 'custom' && (
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Model</label>
+              <input {...field('ai_model', settings.ai_model)} placeholder="model-name" className="w-full border rounded px-3 py-2 text-sm" />
+            </div>
+          )}
           <div>
             <label className="block text-xs text-gray-400 mb-1">
               API Key {settings.ai_api_key_set && <span className="text-green-500 ml-1">✓ set</span>}
@@ -80,27 +126,13 @@ export default function Settings() {
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
-          {(val('ai_provider', settings.ai_provider) === 'custom') && (
+          {currentProvider === 'custom' && (
             <div>
               <label className="block text-xs text-gray-400 mb-1">Base URL</label>
-              <input
-                {...field('ai_base_url', settings.ai_base_url)}
-                placeholder="https://api.openai.com"
-                className="w-full border rounded px-3 py-2 text-sm"
-              />
+              <input {...field('ai_base_url', settings.ai_base_url)} placeholder="https://api.openai.com" className="w-full border rounded px-3 py-2 text-sm" />
             </div>
           )}
-          <p className="text-xs text-gray-400">
-            {
-              {
-                openai: 'Get your API key at platform.openai.com',
-                anthropic: 'Get your API key at console.anthropic.com',
-                gemini: 'Get your API key at aistudio.google.com',
-                grok: 'Get your API key at console.x.ai',
-                custom: 'Use any OpenAI-compatible endpoint (Ollama, Groq, Together AI, etc.)',
-              }[val('ai_provider', settings.ai_provider)] || ''
-            }
-          </p>
+          <p className="text-xs text-gray-400">{PROVIDER_HELP[currentProvider] || ''}</p>
         </section>
         <section className="space-y-3">
           <h2 className="font-semibold text-gray-700">Notifications</h2>
