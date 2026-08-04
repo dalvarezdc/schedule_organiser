@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+from backend.config import settings as app_settings
 from backend.database import get_db
 from backend.routers.settings import _get_or_create_settings
 from backend.services.calendar import get_auth_url, exchange_code_for_token
@@ -12,6 +13,15 @@ router = APIRouter(prefix="/api/integrations", tags=["integrations"])
 @router.get("/calendar/connect")
 def calendar_connect():
     """Redirect user to Google OAuth consent screen."""
+    if not app_settings.google_client_id or not app_settings.google_client_secret:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Google Calendar is not configured. Set GOOGLE_CLIENT_ID and "
+                "GOOGLE_CLIENT_SECRET in your .env file, then restart the backend. "
+                "See README for setup instructions."
+            ),
+        )
     url = get_auth_url()
     return RedirectResponse(url)
 
