@@ -44,3 +44,30 @@ def test_parse_endpoint_returns_preview(client):
 def test_parse_endpoint_requires_api_key(client):
     response = client.post("/api/parse", json={"text": "some text"})
     assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_parse_text_gemini():
+    with patch("backend.services.ai_parser._call_ai", return_value=[
+        {"title": "Task via Gemini", "description": "Desc", "subtasks": [],
+         "due_date": None, "scheduled_date": None, "priority": "low"}
+    ]):
+        result = await parse_text("Do something", provider="gemini", api_key="AIza-test", model="gemini-2.0-flash", base_url="")
+    assert result[0].title == "Task via Gemini"
+
+
+@pytest.mark.asyncio
+async def test_parse_text_grok():
+    with patch("backend.services.ai_parser._call_ai", return_value=[
+        {"title": "Task via Grok", "description": "Desc", "subtasks": [],
+         "due_date": None, "scheduled_date": None, "priority": "high"}
+    ]):
+        result = await parse_text("Do something", provider="grok", api_key="xai-test", model="grok-3", base_url="")
+    assert result[0].title == "Task via Grok"
+
+
+def test_parse_json_response_strips_markdown():
+    from backend.services.ai_parser import _parse_json_response
+    raw = '```json\n[{"title": "T", "description": "D", "subtasks": [], "due_date": null, "scheduled_date": null, "priority": "low"}]\n```'
+    result = _parse_json_response(raw)
+    assert result[0]["title"] == "T"

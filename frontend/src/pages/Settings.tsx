@@ -48,12 +48,26 @@ export default function Settings() {
             <select {...field('ai_provider', settings.ai_provider)} className="w-full border rounded px-3 py-2 text-sm">
               <option value="openai">OpenAI</option>
               <option value="anthropic">Anthropic (Claude)</option>
+              <option value="gemini">Google Gemini</option>
+              <option value="grok">xAI Grok</option>
               <option value="custom">Custom (OpenAI-compatible)</option>
             </select>
           </div>
           <div>
             <label className="block text-xs text-gray-400 mb-1">Model</label>
-            <input {...field('ai_model', settings.ai_model)} className="w-full border rounded px-3 py-2 text-sm" placeholder="gpt-4o" />
+            <input
+              {...field('ai_model', settings.ai_model)}
+              className="w-full border rounded px-3 py-2 text-sm"
+              placeholder={
+                {
+                  openai: 'gpt-4o',
+                  anthropic: 'claude-3-5-sonnet-20241022',
+                  gemini: 'gemini-2.0-flash',
+                  grok: 'grok-3',
+                  custom: 'model-name',
+                }[val('ai_provider', settings.ai_provider)] || 'model-name'
+              }
+            />
           </div>
           <div>
             <label className="block text-xs text-gray-400 mb-1">
@@ -66,10 +80,27 @@ export default function Settings() {
               className="w-full border rounded px-3 py-2 text-sm"
             />
           </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Base URL (for custom endpoint)</label>
-            <input {...field('ai_base_url', settings.ai_base_url)} placeholder="https://api.openai.com" className="w-full border rounded px-3 py-2 text-sm" />
-          </div>
+          {(val('ai_provider', settings.ai_provider) === 'custom') && (
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">Base URL</label>
+              <input
+                {...field('ai_base_url', settings.ai_base_url)}
+                placeholder="https://api.openai.com"
+                className="w-full border rounded px-3 py-2 text-sm"
+              />
+            </div>
+          )}
+          <p className="text-xs text-gray-400">
+            {
+              {
+                openai: 'Get your API key at platform.openai.com',
+                anthropic: 'Get your API key at console.anthropic.com',
+                gemini: 'Get your API key at aistudio.google.com',
+                grok: 'Get your API key at console.x.ai',
+                custom: 'Use any OpenAI-compatible endpoint (Ollama, Groq, Together AI, etc.)',
+              }[val('ai_provider', settings.ai_provider)] || ''
+            }
+          </p>
         </section>
         <section className="space-y-3">
           <h2 className="font-semibold text-gray-700">Notifications</h2>
