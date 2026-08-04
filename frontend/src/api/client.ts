@@ -1,24 +1,33 @@
 import axios from 'axios'
-import type { Task, ParsedTask, Settings, Subtask } from '../types'
+import type { Task, ParsedTask, Settings, ImproveResult } from '../types'
 
 const api = axios.create({ baseURL: '/api' })
 
 // Tasks
 export const getTasks = () => api.get<Task[]>('/tasks').then(r => r.data)
 export const getTask = (id: string) => api.get<Task>(`/tasks/${id}`).then(r => r.data)
-export const createTask = (payload: Partial<Task> & { subtasks?: Partial<Subtask>[] }) =>
-  api.post<Task>('/tasks', payload).then(r => r.data)
+export const createTask = (payload: Partial<Task> & {
+  subtasks?: { title: string; done?: boolean; order?: number }[]
+  parent_id?: string | null
+  notify_slack?: boolean
+  notify_discord?: boolean
+  sync_calendar?: boolean
+}) => api.post<Task>('/tasks', payload).then(r => r.data)
 export const updateTask = (id: string, payload: Partial<Task>) =>
   api.put<Task>(`/tasks/${id}`, payload).then(r => r.data)
 export const deleteTask = (id: string) => api.delete(`/tasks/${id}`)
 
-// Subtasks
-export const addSubtask = (taskId: string, title: string) =>
-  api.post<Subtask>(`/tasks/${taskId}/subtasks`, { title, done: false, order: 0 }).then(r => r.data)
-export const updateSubtask = (taskId: string, subtaskId: string, payload: Partial<Subtask>) =>
-  api.put<Subtask>(`/tasks/${taskId}/subtasks/${subtaskId}`, payload).then(r => r.data)
-export const deleteSubtask = (taskId: string, subtaskId: string) =>
-  api.delete(`/tasks/${taskId}/subtasks/${subtaskId}`)
+// Link an existing task as a child of another
+export const linkAsChild = (childId: string, parentId: string) =>
+  api.put<Task>(`/tasks/${childId}`, { parent_id: parentId }).then(r => r.data)
+
+// Move a task back to root (unlink from parent)
+export const unlinkTask = (taskId: string) =>
+  api.put<Task>(`/tasks/${taskId}`, { parent_id: null }).then(r => r.data)
+
+// AI Improve
+export const improveTask = (id: string) =>
+  api.post<ImproveResult>(`/tasks/${id}/improve`).then(r => r.data)
 
 // Parse
 export const parseText = (text: string) =>

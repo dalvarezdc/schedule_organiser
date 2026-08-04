@@ -1,31 +1,15 @@
+from __future__ import annotations
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 from backend.models import TaskStatus, TaskPriority
 
 
-class SubtaskBase(BaseModel):
+class SubtaskInput(BaseModel):
+    """Lightweight subtask input used during task creation (becomes a child Task)."""
     title: str
     done: bool = False
     order: int = 0
-
-
-class SubtaskCreate(SubtaskBase):
-    pass
-
-
-class SubtaskUpdate(BaseModel):
-    title: Optional[str] = None
-    done: Optional[bool] = None
-    order: Optional[int] = None
-
-
-class SubtaskOut(SubtaskBase):
-    id: str
-    task_id: str
-
-    class Config:
-        from_attributes = True
 
 
 class TaskBase(BaseModel):
@@ -38,7 +22,9 @@ class TaskBase(BaseModel):
 
 
 class TaskCreate(TaskBase):
-    subtasks: list[SubtaskCreate] = []
+    parent_id: Optional[str] = None
+    order: int = 0
+    subtasks: list[SubtaskInput] = []
     notify_slack: bool = True
     notify_discord: bool = True
     sync_calendar: bool = True
@@ -51,18 +37,25 @@ class TaskUpdate(BaseModel):
     priority: Optional[TaskPriority] = None
     due_date: Optional[datetime] = None
     scheduled_date: Optional[datetime] = None
+    parent_id: Optional[str] = None
+    order: Optional[int] = None
 
 
 class TaskOut(TaskBase):
     id: str
+    parent_id: Optional[str] = None
+    order: int = 0
     google_event_id: Optional[str] = None
     share_token: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-    subtasks: list[SubtaskOut] = []
+    children: list[TaskOut] = []
 
     class Config:
         from_attributes = True
+
+
+TaskOut.model_rebuild()  # required for self-referential model
 
 
 class ParsedSubtask(BaseModel):
@@ -84,6 +77,12 @@ class ParseRequest(BaseModel):
 
 class ParseResponse(BaseModel):
     tasks: list[ParsedTask]
+
+
+class ImproveResponse(BaseModel):
+    title: str
+    description: str
+    suggested_subtasks: list[ParsedSubtask] = []
 
 
 class SettingsOut(BaseModel):

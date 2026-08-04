@@ -30,22 +30,26 @@ class Task(Base):
     scheduled_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     google_event_id: Mapped[str | None] = mapped_column(String, nullable=True)
     share_token: Mapped[str | None] = mapped_column(String, nullable=True, unique=True)
+    parent_id: Mapped[str | None] = mapped_column(
+        String, ForeignKey("tasks.id", ondelete="CASCADE"), nullable=True
+    )
+    order: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    subtasks: Mapped[list["Subtask"]] = relationship("Subtask", back_populates="task", cascade="all, delete-orphan", order_by="Subtask.order")
-
-
-class Subtask(Base):
-    __tablename__ = "subtasks"
-
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    task_id: Mapped[str] = mapped_column(String, ForeignKey("tasks.id"), nullable=False)
-    title: Mapped[str] = mapped_column(String, nullable=False)
-    done: Mapped[bool] = mapped_column(Boolean, default=False)
-    order: Mapped[int] = mapped_column(Integer, default=0)
-
-    task: Mapped["Task"] = relationship("Task", back_populates="subtasks")
+    children: Mapped[list["Task"]] = relationship(
+        "Task",
+        back_populates="parent",
+        cascade="all, delete-orphan",
+        order_by="Task.order",
+        foreign_keys="Task.parent_id",
+    )
+    parent: Mapped["Task | None"] = relationship(
+        "Task",
+        back_populates="children",
+        remote_side="Task.id",
+        foreign_keys="Task.parent_id",
+    )
 
 
 class AppSettings(Base):

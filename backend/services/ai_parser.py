@@ -133,3 +133,122 @@ async def _call_ai(text: str, provider: str, api_key: str, model: str, base_url:
 async def parse_text(text: str, provider: str, api_key: str, model: str, base_url: str) -> list[ParsedTask]:
     raw_tasks = await _call_ai(text, provider, api_key, model, base_url)
     return [ParsedTask(**t) for t in raw_tasks]
+
+
+# ---------------------------------------------------------------------------
+# AI Improve — rewrites a single task's title, description, suggests subtasks
+# ---------------------------------------------------------------------------
+
+IMPROVE_SYSTEM_PROMPT = """You are a project management assistant. The user will give you a task title and description.
+
+Your job is to:
+1. Rewrite the title to be clear and concise (action-oriented, under 80 chars)
+2. Expand the description into a well-structured 2-5 sentence explanation of what needs to be done, why, and any key acceptance criteria
+3. Suggest 2-5 concrete subtasks as an array
+
+Return ONLY a valid JSON object (not an array). No markdown, no explanation. Example:
+{
+  "title": "Implement user authentication",
+  "description": "Add JWT-based login and registration endpoints. Users should be able to sign up with email/password, receive a token, and use that token to access protected routes. Acceptance: all auth tests pass, tokens expire after 24h.",
+  "suggested_subtasks": [
+    {"title": "Create /auth/register endpoint"},
+    {"title": "Create /auth/login endpoint"},
+    {"title": "Add JWT middleware to protected routes"}
+  ]
+}"""
+
+
+def _parse_improve_response(raw: str) -> dict:
+    """Parse a single-object JSON response from the improve prompt."""
+    raw = raw.strip()
+    if raw.startswith("```"):
+        lines = raw.split("\n")
+        raw = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"AI returned invalid JSON: {e}") from e
+    if not isinstance(data, dict):
+        raise ValueError(f"Expected a JSON object, got: {type(data)}")
+    return {
+        "title": data.get("title", ""),
+        "description": data.get("description", ""),
+        "suggested_subtasks": data.get("suggested_subtasks", []),
+    }
+
+
+async def _improve_call_ai(text: str, provider: str, api_key: str, model: str, base_url: str) -> dict:
+    """Call AI with IMPROVE_SYSTEM_PROMPT and return a single improved-task dict."""
+    if provider == "anthropic":
+        base = base_url or "https://api.anthropic.com"
+        headers = {
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        }
+        body = {
+            "model": model,
+            "max_tokens": 1024,
+            "system": IMPROVE_SYSTEM_PROMPT,
+            "messages": [{"role": "user", "content": text}],
+        }
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(f"{base}/v1/messages", json=body, headers=headers, timeout=30)
+            resp.raise_for_status()
+            raw = resp.json()["content"][0]["text"]
+        return _parse_improve_response(raw)
+
+    if provider == "gemini":
+        m = model or "gemini-1.5-flash"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
+        body = {
+            "system_instruction": {"parts": [{"text": IMPROVE_SYSTEM_PROMPT}]},
+            "contents": [{"parts": [{"text": text}]}],
+            "generationConfig": {"responseMimeType": "application/json"},
+        }
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                url,
+                json=body,
+                headers={"Content-Type": "application/json"},
+                params={"key": api_key},
+                timeout=30,
+            )
+            resp.raise_for_status()
+        raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        return _parse_improve_response(raw)
+
+    # openai-compatible (openai, grok, custom)
+    if provider == "grok":
+        base = base_url or "https://api.x.ai"
+        m = model or "grok-4.5"
+    else:
+        base = base_url or "https://api.openai.com"
+        m = model
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    body = {
+        "model": m,
+        "messages": [
+            {"role": "system", "content": IMPROVE_SYSTEM_PROMPT},
+            {"role": "user", "content": text},
+        ],
+        "response_format": {"type": "json_object"},
+    }
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(f"{base}/v1/chat/completions", json=body, headers=headers, timeout=30)
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"]
+    return _parse_improve_response(raw)
+
+
+async def improve_task(
+    title: str,
+    description: str,
+    provider: str,
+    api_key: str,
+    model: str,
+    base_url: str,
+) -> dict:
+    """Call AI to improve a task's title, description, and suggest subtasks."""
+    user_content = f"Title: {title}\n\nDescription: {description or '(none)'}"
+    return await _improve_call_ai(user_content, provider, api_key, model, base_url)
