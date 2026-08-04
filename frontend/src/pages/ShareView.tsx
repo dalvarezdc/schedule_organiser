@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getSharedTask } from '../api/client'
 import type { Task } from '../types'
+import Markdown from '../components/Markdown'
 
 function ChildList({ children }: { children: Task[] }) {
   if (!children.length) return null
@@ -64,9 +65,7 @@ export default function ShareView() {
             </span>
           )}
         </div>
-        {task.description && (
-          <p className="text-slate-600 text-sm leading-relaxed">{task.description}</p>
-        )}
+        {task.description && <Markdown content={task.description} />}
         {task.children.length > 0 && (
           <div>
             <h3 className="font-bold text-navy mb-2 text-sm">Subtasks</h3>

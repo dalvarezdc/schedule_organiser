@@ -6,3 +6,8 @@ __pycache__/
 node_modules/
 frontend/dist/
 .superpowers/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+

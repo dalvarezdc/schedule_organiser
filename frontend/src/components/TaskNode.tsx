@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Task } from '../types'
 import { createTask, updateTask, deleteTask, linkAsChild } from '../api/client'
 import TaskPicker from './TaskPicker'
+import Markdown from './Markdown'
 
 const priorityBadge: Record<string, string> = {
   low: 'bg-slate-100 text-slate-600',
@@ -197,12 +198,12 @@ export default function TaskNode({ task, depth = 0, onRefresh, allRootTasks = []
       </div>
 
       {showDesc && task.description && (
-        <p
-          className="text-sm text-slate-500 leading-relaxed pb-2 pr-4"
+        <div
+          className="pb-2 pr-4"
           style={{ paddingLeft: padLeft + 40 }}
         >
-          {task.description}
-        </p>
+          <Markdown content={task.description} className="text-slate-500" />
+        </div>
       )}
 
       {addingChild && (

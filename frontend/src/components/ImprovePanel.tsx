@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ImproveResult } from '../types'
+import MarkdownEditor from './MarkdownEditor'
 
 interface Props {
   result: ImproveResult
@@ -50,11 +51,12 @@ export default function ImprovePanel({ result, onApply, onCancel }: Props) {
         <label className="block text-xs text-slate-500 mb-1 font-medium">
           Improved description
         </label>
-        <textarea
+        <MarkdownEditor
           value={description}
-          onChange={e => setDescription(e.target.value)}
+          onChange={setDescription}
           rows={5}
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-teal resize-vertical bg-white leading-relaxed"
+          minHeight={120}
+          placeholder="Improved description…"
         />
       </div>
 

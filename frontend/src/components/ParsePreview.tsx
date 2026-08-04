@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { ParsedTask } from '../types'
 import { createTask, getSettings } from '../api/client'
+import MarkdownEditor from './MarkdownEditor'
 
 interface Props {
   tasks: ParsedTask[]
@@ -108,12 +109,13 @@ export default function ParsePreview({ tasks: initialTasks, onConfirm, onCancel 
             </div>
           </div>
 
-          <textarea
+          <MarkdownEditor
             value={task.description}
-            onChange={e => updateTaskField(i, 'description', e.target.value)}
-            rows={2}
-            className="w-full text-sm text-slate-600 border border-slate-100 rounded-lg p-2.5 focus:outline-none focus:border-brand-teal resize-none bg-surface"
-            placeholder="Description…"
+            onChange={val => updateTaskField(i, 'description', val)}
+            rows={3}
+            minHeight={88}
+            placeholder="Description… Markdown supported."
+            defaultShowToolbar={false}
           />
 
           {task.subtasks.length > 0 && (

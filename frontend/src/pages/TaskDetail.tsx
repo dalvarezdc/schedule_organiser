@@ -12,6 +12,7 @@ import {
 } from '../api/client'
 import TaskTree from '../components/TaskTree'
 import ImprovePanel from '../components/ImprovePanel'
+import MarkdownEditor from '../components/MarkdownEditor'
 import { useState } from 'react'
 import type { ImproveResult } from '../types'
 
@@ -147,33 +148,19 @@ export default function TaskDetail() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-xs text-slate-400 font-bold uppercase tracking-wide">
-              Description
-            </label>
-            <button
-              onClick={handleImprove}
-              disabled={improving}
-              className="text-xs text-brand-tealDark hover:text-teal-800 font-semibold disabled:opacity-40 flex items-center gap-1.5 transition-colors"
-            >
-              {improving ? (
-                <>
-                  <span className="inline-block w-3 h-3 border-2 border-brand-tealDark border-t-transparent rounded-full animate-spin" />
-                  Improving…
-                </>
-              ) : (
-                '✦ Improve with AI'
-              )}
-            </button>
-          </div>
-          <textarea
+          <label className="block text-xs text-slate-400 font-bold uppercase tracking-wide mb-1.5">
+            Description
+          </label>
+          <MarkdownEditor
             key={`desc-${task.updated_at}`}
             defaultValue={task.description}
-            onBlur={e => update('description', e.target.value)}
+            onBlur={val => update('description', val)}
             rows={10}
-            placeholder="Describe the task in detail…"
-            className="w-full border border-slate-200 rounded-xl p-4 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-brand-teal focus:ring-2 focus:ring-brand-teal/20 resize-vertical leading-relaxed transition-colors"
-            style={{ minHeight: '180px' }}
+            minHeight={180}
+            placeholder="Describe the task in detail… Markdown supported."
+            showAiImprove
+            onAiImprove={handleImprove}
+            aiImproving={improving}
           />
 
           {improveError && (
