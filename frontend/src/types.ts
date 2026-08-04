@@ -1,0 +1,49 @@
+export type TaskStatus = 'pending' | 'in_progress' | 'done'
+export type TaskPriority = 'low' | 'medium' | 'high'
+
+export interface Subtask {
+  id: string
+  task_id: string
+  title: string
+  done: boolean
+  order: number
+}
+
+export interface Task {
+  id: string
+  title: string
+  description: string
+  status: TaskStatus
+  priority: TaskPriority
+  due_date: string | null
+  scheduled_date: string | null
+  google_event_id: string | null
+  share_token: string | null
+  created_at: string
+  updated_at: string
+  subtasks: Subtask[]
+}
+
+export interface ParsedSubtask {
+  title: string
+}
+
+export interface ParsedTask {
+  title: string
+  description: string
+  subtasks: ParsedSubtask[]
+  due_date: string | null
+  scheduled_date: string | null
+  priority: TaskPriority
+}
+
+export interface Settings {
+  ai_provider: string
+  ai_model: string
+  ai_base_url: string
+  ai_api_key_set: boolean
+  slack_webhook_url: string
+  discord_webhook_url: string
+  google_calendar_id: string
+  google_connected: boolean
+}

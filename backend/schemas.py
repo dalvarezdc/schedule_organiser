@@ -39,6 +39,9 @@ class TaskBase(BaseModel):
 
 class TaskCreate(TaskBase):
     subtasks: list[SubtaskCreate] = []
+    notify_slack: bool = True
+    notify_discord: bool = True
+    sync_calendar: bool = True
 
 
 class TaskUpdate(BaseModel):

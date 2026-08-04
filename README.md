@@ -6,41 +6,36 @@ Smart self-hosted task organiser. Write or speak your tasks in plain text — th
 
 ## Quick Start
 
-### 1. Clone and set up
+### Prerequisites
+
+- Python 3.11+
+- Node 18+
+
+### One-command setup
 
 ```bash
-git clone <repo>
+git clone <repo-url>
 cd schedule_organiser
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r backend/requirements.txt
-cp .env.example .env
-# Edit .env — set SECRET_KEY to a random 32-character string
+bash setup.sh
 ```
 
-### 2. Build the frontend
+That's it. The script creates a virtual environment, installs dependencies, auto-generates a secret key, and builds the frontend.
+
+### Run
 
 ```bash
-cd frontend
-npm install
-npm run build
-cd ..
+make run
 ```
 
-### 3. Run
+Open **http://localhost:8000**
 
-```bash
-uvicorn backend.main:app --host 0.0.0.0 --port 8000
-```
+### First-time configuration
 
-Open http://localhost:8000
+Go to **Settings** in the app and add your AI API key (OpenAI, Claude, or any OpenAI-compatible provider). That's all you need to start creating tasks from plain text.
 
-### 4. Configure
-
-Go to **Settings** in the app to:
-- Set your AI provider (OpenAI, Claude, or custom) and API key
-- Add Slack and/or Discord webhook URLs for notifications
-- Connect Google Calendar via OAuth
+Optionally:
+- Add a Slack or Discord webhook URL for notifications
+- Connect Google Calendar via OAuth for automatic event creation
 
 ---
 
