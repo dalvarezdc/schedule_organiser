@@ -43,3 +43,11 @@ export const generateShareLink = (taskId: string) =>
   api.post<{ share_token: string; share_url: string }>(`/tasks/${taskId}/share`).then(r => r.data)
 export const revokeShareLink = (taskId: string) => api.delete(`/tasks/${taskId}/share`)
 export const getSharedTask = (token: string) => api.get<Task>(`/share/${token}`).then(r => r.data)
+
+// Slack Notifications
+export const sendTasksToSlack = (taskIds: string[], slackWebhookUrl?: string) =>
+  api.post<{ success: boolean; sent_count: number; message: string }>('/tasks/slack-notify', {
+    task_ids: taskIds,
+    slack_webhook_url: slackWebhookUrl || undefined,
+  }).then(r => r.data)
+

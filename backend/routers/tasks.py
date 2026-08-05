@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.models import Task, TaskStatus
-from backend.schemas import TaskCreate, TaskUpdate, TaskOut, ImproveResponse
+from backend.schemas import TaskCreate, TaskUpdate, TaskOut, ImproveResponse, SlackBulkNotifyRequest, SlackBulkNotifyResponse
 from backend.routers.settings import _get_or_create_settings
-from backend.services.notifications import send_task_created
+from backend.services.notifications import send_task_created, send_tasks_to_slack
 from backend.services.calendar import create_event
 from backend.services.ai_parser import improve_task as ai_improve_task
 from backend.crypto import decrypt
 from datetime import datetime
+
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
@@ -179,3 +180,38 @@ async def improve_task_endpoint(task_id: str, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=502, detail=f"AI improve failed: {e}")
     return result
+
+
+@router.post("/slack-notify", response_model=SlackBulkNotifyResponse)
+async def slack_notify_endpoint(
+    payload: SlackBulkNotifyRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    if not payload.task_ids:
+        raise HTTPException(status_code=400, detail="No task IDs provided.")
+
+    s = _get_or_create_settings(db)
+    webhook_url = (payload.slack_webhook_url or s.slack_webhook_url or "").strip()
+    if not webhook_url:
+        raise HTTPException(
+            status_code=400,
+            detail="Slack Webhook URL is not configured. Set it in Settings or enter a webhook URL.",
+        )
+
+    tasks = db.query(Task).filter(Task.id.in_(payload.task_ids)).all()
+    if not tasks:
+        raise HTTPException(status_code=404, detail="No matching tasks found for the provided IDs.")
+
+    base_url = str(request.base_url).rstrip("/")
+    try:
+        await send_tasks_to_slack(tasks, webhook_url, base_url)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to send Slack notification: {e}")
+
+    return SlackBulkNotifyResponse(
+        success=True,
+        sent_count=len(tasks),
+        message=f"Successfully sent {len(tasks)} task(s) to Slack.",
+    )
+

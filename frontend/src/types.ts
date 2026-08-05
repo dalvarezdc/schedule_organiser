@@ -47,3 +47,10 @@ export interface Settings {
   google_calendar_id: string
   google_connected: boolean
 }
+
+export interface SlackBulkNotifyResponse {
+  success: boolean
+  sent_count: number
+  message: string
+}
+
