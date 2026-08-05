@@ -107,3 +107,15 @@ class SettingsUpdate(BaseModel):
     slack_webhook_url: Optional[str] = None
     discord_webhook_url: Optional[str] = None
     google_calendar_id: Optional[str] = None
+
+
+class SlackBulkNotifyRequest(BaseModel):
+    task_ids: list[str]
+    slack_webhook_url: Optional[str] = None
+
+
+class SlackBulkNotifyResponse(BaseModel):
+    success: bool
+    sent_count: int
+    message: str
+

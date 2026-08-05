@@ -5,6 +5,8 @@ import InputPanel from './pages/InputPanel'
 import TaskDetail from './pages/TaskDetail'
 import Settings from './pages/Settings'
 import ShareView from './pages/ShareView'
+import SlackNotifications from './pages/SlackNotifications'
+
 
 const queryClient = new QueryClient()
 
@@ -81,10 +83,20 @@ function IconPlus({ className = 'w-4 h-4' }: { className?: string }) {
   )
 }
 
+function IconSlack({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zM8.834 6.313a2.528 2.528 0 0 1 2.521 2.521a2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zM17.688 8.834a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.165 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.165 18.956a2.528 2.528 0 0 1 2.523 2.521A2.528 2.528 0 0 1 15.165 24a2.527 2.527 0 0 1-2.52-2.523v-2.52h2.52zM15.165 17.684a2.527 2.527 0 0 1-2.52-2.521 2.527 2.527 0 0 1 2.52-2.521h6.322A2.528 2.528 0 0 1 24 15.163a2.528 2.528 0 0 1-2.522 2.521h-6.313z" />
+    </svg>
+  )
+}
+
+
 function pageTitle(pathname: string): string {
   if (pathname === '/' || pathname === '/input') return 'Add Tasks'
   if (pathname.startsWith('/tasks/') && pathname !== '/tasks') return 'Task Detail'
   if (pathname.startsWith('/tasks')) return 'My Tasks'
+  if (pathname.startsWith('/slack-notifications')) return 'Slack Notifications'
   if (pathname.startsWith('/settings')) return 'Settings'
   return 'Schedule Organiser'
 }
@@ -144,6 +156,10 @@ function AppLayout() {
             <IconArchive />
             Archive
           </Link>
+          <NavLink to="/slack-notifications" className={navItemClass}>
+            <IconSlack />
+            Slack Notifications
+          </NavLink>
         </nav>
 
         <div className="pt-4 border-t border-navy-light/40 space-y-1">
@@ -213,7 +229,9 @@ function AppRoutes() {
         <Route path="/input" element={<InputPanel />} />
         <Route path="/tasks" element={<Dashboard />} />
         <Route path="/tasks/:id" element={<TaskDetail />} />
+        <Route path="/slack-notifications" element={<SlackNotifications />} />
         <Route path="/settings" element={<Settings />} />
+
       </Route>
     </Routes>
   )

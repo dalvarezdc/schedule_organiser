@@ -111,3 +111,37 @@ def test_self_parent_guard(client):
     task = client.post("/api/tasks", json={"title": "Task"}).json()
     response = client.put(f"/api/tasks/{task['id']}", json={"parent_id": task["id"]})
     assert response.status_code == 400
+
+
+def test_slack_notify_endpoint_missing_webhook(client):
+    """Slack notify fails when no webhook URL is set or provided."""
+    task = client.post("/api/tasks", json={"title": "Task 1", "description": "Desc 1"}).json()
+    resp = client.post("/api/tasks/slack-notify", json={"task_ids": [task["id"]]})
+    assert resp.status_code == 400
+    assert "webhook" in resp.json()["detail"].lower()
+
+
+def test_slack_notify_endpoint_success(client):
+    """Slack notify sends bulk tasks when webhook URL is provided."""
+    from unittest.mock import patch, AsyncMock
+    t1 = client.post("/api/tasks", json={"title": "Task A", "description": "Desc A"}).json()
+    t2 = client.post("/api/tasks", json={"title": "Task B", "description": "Desc B"}).json()
+
+    with patch("backend.routers.tasks.send_tasks_to_slack", new_callable=AsyncMock) as mock_send:
+        resp = client.post(
+            "/api/tasks/slack-notify",
+            json={
+                "task_ids": [t1["id"], t2["id"]],
+                "slack_webhook_url": "https://hooks.slack.com/services/custom",
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["success"] is True
+        assert data["sent_count"] == 2
+        mock_send.assert_called_once()
+        args = mock_send.call_args[0]
+        sent_tasks = args[0]
+        assert len(sent_tasks) == 2
+        assert args[1] == "https://hooks.slack.com/services/custom"
+
